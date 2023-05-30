@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <title>Spring Boot Calendar</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+
+        .calendar {
+            width: 1200px;
+            padding: 80px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .month {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 36px;
+        }
+
+        .month span {
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 30px;
+            text-align: center;
+            border: 2px solid #ccc;
+        }
+
+        .nav-buttons {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .nav-buttons button {
+            padding: 30px 60px;
+            margin: 0 20px;
+            background-color: #f2f2f2;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 28px;
+        }
+
+        .nav-buttons button:hover {
+            background-color: #e2e2e2;
+        }
+
+        .nav-buttons .btn-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .selected {
+            background-color: #e2e2e2;
+        }
+        .hil {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="calendar">
+    <div class="month">
+        <div class="nav-buttons">
+            <div class="btn-container">
+                <button id="prevMonth">&lt;</button>
+                <span id="currentMonth"></span>
+                <button id="nextMonth">&gt;</button>
+            </div>
+        </div>
+    </div>
+    <table>
+        <thead>
+        <tr>
+            <th>Sun</th>
+            <th>Mon</th>
+            <th>Tue</th>
+            <th>Wed</th>
+            <th>Thu</th>
+            <th>Fri</th>
+            <th>Sat</th>
+        </tr>
+        </thead>
+        <tbody id="calendarBody"></tbody>
+    </table>
+</div>
+
+<div id="sidebar" style="display: none">
+    <h2>Add Shift</h2>
+    <form id="shiftForm">
+        <label for="shiftId">Shift Id:</label>
+        <input type="text" id="shiftId" required><br>
+
+        <label for="employeeName">Employee Name:</label>
+        <input type="text" id="employeeName" required><br>
+
+        <label for="startTime">Start Time:</label>
+        <input type="text" id="startTime" required><br>
+
+        <label for="endTime">End Time:</label>
+        <input type="text" id="endTime" required><br>
+
+        <label for="status">Shift status:</label>
+        <input type="text" id="status" required><br>
+
+        <input type="submit" value="Add">
+        <button type="button" id="cancelBtn">Cancel</button>
+    </form>
+</div>
+
+
+<script>
+    // Get current date
+    let currentDate = new Date()
+    let currentMonth = currentDate.getMonth()
+    let currentYear = currentDate.getFullYear()
+
+    // Display current month and year
+    document.getElementById("currentMonth").innerHTML = getMonthName(currentMonth) + " " + currentYear
+
+    // Render initial calendar
+    renderCalendar(currentMonth, currentYear)
+
+    // Attach event listeners to navigation buttons
+    document.getElementById("prevMonth").addEventListener("click", function () {
+        currentMonth--
+        if (currentMonth < 0) {
+            currentMonth = 11
+            currentYear--
+        }
+        updateCalendar(currentMonth, currentYear)
+    });
+
+    document.getElementById("nextMonth").addEventListener("click", function () {
+        currentMonth++
+        if (currentMonth > 11) {
+            currentMonth = 0
+            currentYear++
+        }
+        updateCalendar(currentMonth, currentYear)
+    });
+
+    // Function to render the calendar
+    function renderCalendar(month, year) {
+        let calendarBody = document.getElementById("calendarBody")
+        calendarBody.innerHTML = ""
+
+        let date = new Date(year, month, 1)
+        let firstDay = date.getDay()
+        let daysInMonth = new Date(year, month + 1, 0).getDate()
+
+        let row = document.createElement("tr")
+        for (let i = 0; i < firstDay; i++) {
+            let cell = document.createElement("td")
+            row.appendChild(cell)
+        }
+
+        let dayCount = 1;
+        for (let i = 0; i < 7 - firstDay; i++) {
+            let cell = document.createElement("td")
+            cell.innerText = dayCount++
+
+            let cellDate = `${dayCount - 1}-${month + 1}-${year}`;
+            if (hasMatchingShift(cellDate)) {
+                cell.classList.add("hil");
+            }
+
+            row.appendChild(cell)
+        }
+
+        calendarBody.appendChild(row);
+
+        while (dayCount <= daysInMonth) {
+            row = document.createElement("tr")
+            for (let i = 0; i < 7; i++) {
+                if (dayCount > daysInMonth) {
+                    break
+                }
+                let cell = document.createElement("td")
+                cell.innerText = dayCount++
+
+                let cellDate = `${dayCount - 1}-${month + 1}-${year}`;
+                if (hasMatchingShift(cellDate)) {
+                    cell.classList.add("hil");
+                }
+
+                row.appendChild(cell)
+            }
+            calendarBody.appendChild(row)
+        }
+    }
+
+     function hasMatchingShift(date) {
+        const shifts =  getShiftsFromServer()
+
+        for (let i = 0; i < shifts.length; i++) {
+            if (shifts[i].date === date) {
+
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    //hardcoded as I did not figure out how to fetch the results correctly.
+    function getShiftsFromServer() {
+        return [
+            { date: "2-6-2023" },
+            { date: "5-6-2023" },
+            { date: "30-5-2023" }
+        ];
+    }
+
+    // Function to update the calendar
+    function updateCalendar(month, year) {
+        document.getElementById("currentMonth").innerHTML = getMonthName(month) + " " + year
+        renderCalendar(month, year)
+    }
+
+    // Helper function to get month name
+    function getMonthName(month) {
+        let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+        return months[month]
+    }
+
+    //reference to elements
+    const calendarBody = document.getElementById("calendarBody")
+    const sidebar = document.getElementById("sidebar")
+    const shiftForm = document.getElementById("shiftForm")
+    const cancelBtn = document.getElementById("cancelBtn")
+
+    let selectedCell = null
+
+    //handles click event
+    function handleCellClick(event) {
+        const cell = event.target
+        if (cell.tagName === "TD") {
+            if (selectedCell) {
+                selectedCell.classList.remove("selected")
+            }
+            selectedCell = cell
+            selectedCell.classList.add("selected")
+
+            openSidebar()
+        }
+    }
+
+    function openSidebar() {
+        sidebar.style.display = "block"
+    }
+
+    function closeSidebar() {
+        sidebar.style.display = "none"
+        shiftForm.reset()
+        if (selectedCell) {
+            selectedCell.classList.remove("selected")
+            selectedCell = null
+        }
+    }
+
+    //handle the shift form submit
+    function handleShiftFormSubmit(event) {
+        event.preventDefault()
+
+        const employeeId = document.getElementById("shiftId").value
+        const employeeName = document.getElementById("employeeName").value
+        const startTime = document.getElementById("startTime").value
+        const endTime = document.getElementById("endTime").value
+        const status = document.getElementById("status").value
+
+        let day = selectedCell.innerText
+
+        const shift = {
+            id: employeeId,
+            name: employeeName,
+            start: startTime,
+            end: endTime,
+            status: status,
+            date: `${day}-${currentMonth + 1}-${currentYear}`
+        }
+
+        addShift(shift)
+        closeSidebar()
+    }
+
+    function addShift(shift) {
+        fetch("/api/shifts", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify([shift])
+        })
+            .then(response => response.json())
+            .then(data => console.log(data))
+            .catch(error => console.error("Error", error))
+    }
+
+    //event listeners
+    calendarBody.addEventListener("click", handleCellClick)
+    shiftForm.addEventListener("submit", handleShiftFormSubmit)
+    cancelBtn.addEventListener("click", closeSidebar)
+</script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Management</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 800px;
+            margin-top: 50px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        .form-container {
+            background-color: lightgray;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-container input[type="text"],
+        .form-container input[type="number"] {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        .form-container button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .item-container {
+            background-color: white;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .item-container p {
+            margin-bottom: 10px;
+        }
+
+        .item-container button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .edit-container input[type="text"],
+        .edit-container input[type="number"] {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+
+        .edit-container button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .returnBack {
+            display: flex;
+            position: absolute;
+            top: 0;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Stock Management</h1>
+
+    <!-- Delete Item -->
+    <div class="item-container">
+        <h2>Delete Item</h2>
+        <a class="returnBack" id="previousPage">Previous page</a>
+        <form id="deleteForm">
+            <label for="deleteId">Item ID:</label>
+            <input type="text" id="deleteId" placeholder="Enter item ID">
+            <button type="submit">Delete</button>
+        </form>
+    </div>
+
+    <!-- Create Item -->
+    <div class="form-container">
+        <h2>Create Item</h2>
+        <form id="createForm">
+            <label for="createId">Id:</label>
+            <input type="text" id="createId" placeholder="Enter Id">
+            <label for="createName">Name:</label>
+            <input type="text" id="createName" placeholder="Enter name">
+            <label for="createQuantity">Quantity:</label>
+            <input type="number" id="createQuantity" placeholder="Enter quantity">
+            <label for="createPrice">Price:</label>
+            <input type="number" id="createPrice" placeholder="Enter price">
+            <label for="createWeight">Net Weight:</label>
+            <input type="number" id="createWeight" placeholder="Enter Net Weight">
+            <label for="createZone">Zone:</label>
+            <input type="text" id="createZone" placeholder="Enter zone">
+            <label for="createCat">Category:</label>
+            <input type="text" id="createCat" placeholder="Enter category">
+            <label for="createManu">Manufacturer:</label>
+            <input type="text" id="createManu" placeholder="Enter manufacturer">
+            <button type="submit">Create</button>
+
+        </form>
+    </div>
+
+    <div class="item-container">
+        <h2>Search and Edit Item</h2>
+        <form id="searchForm">
+            <label for="searchId">Item ID:</label>
+            <input type="text" id="searchId" placeholder="Enter item ID">
+            <button type="submit">Search</button>
+        </form>
+
+        <div id="itemDetails" style="display: none;">
+            <p><strong>ID:</strong> <span id="itemId"></span></p>
+            <p><strong>Name:</strong> <span id="itemName"></span></p>
+            <p><strong>Quantity:</strong> <span id="itemQuantity"></span></p>
+            <p><strong>Price:</strong> <span id="itemPrice"></span></p>
+            <p><strong>Net Weight:</strong> <span id="itemWeight"></span></p>
+            <p><strong>Zone:</strong> <span id="itemZone"></span></p>
+            <p><strong>Category:</strong> <span id="itemCategory"></span></p>
+            <p><strong>Manufacturer:</strong> <span id="itemManufacturer"></span></p>
+            <button id="editButton">Edit</button>
+
+            <form id="editForm" style="display: none;">
+                <!-- Edit form fields -->
+                <label for="editName">Name:</label>
+                <input type="text" id="editName" placeholder="Enter name">
+                <label for="editQuantity">Quantity:</label>
+                <input type="number" id="editQuantity" placeholder="Enter quantity">
+                <label for="editPrice">Price:</label>
+                <input type="number" id="editPrice" placeholder="Enter price">
+                <label for="editWeight">Net Weight:</label>
+                <input type="number" id="editWeight" placeholder="Enter weight">
+                <label for="editZone">Zone:</label>
+                <input type="text" id="editZone" placeholder="Enter zone">
+                <label for="editCategory">Category:</label>
+                <input type="text" id="editCategory" placeholder="Enter category">
+                <label for="editManufacturer">Manufacturer:</label>
+                <input type="text" id="editManufacturer" placeholder="Enter manufacturer">
+
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+
+    document.getElementById("previousPage").addEventListener("click", function (){
+        history.back()
+    })
+    // Delete Item Form
+    const deleteForm = document.getElementById('deleteForm');
+    deleteForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const itemId = document.getElementById('deleteId').value;
+        fetch(`/api/stock/${itemId}`, { method: 'DELETE' })
+            .then(response => {
+                if (response.ok) {
+                    alert('Item deleted successfully');
+                } else {
+                    alert('Failed to delete item');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        deleteForm.reset();
+    });
+
+    // Create Item Form
+    const createForm = document.getElementById('createForm');
+    createForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const id = document.getElementById('createId').value
+        const name = document.getElementById('createName').value;
+        const quantity = document.getElementById('createQuantity').value;
+        const price = document.getElementById('createPrice').value;
+        const net_weight = document.getElementById('createWeight').value;
+        const zone = document.getElementById('createZone').value;
+        const category = document.getElementById('createCat').value;
+        const manufacturer = document.getElementById('createManu').value;
+
+        const newItem = { id, name, quantity, price, net_weight, zone, category, manufacturer };
+        fetch('/api/stock', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify([newItem])
+        })
+            .then(response => {
+                if (response.ok) {
+                    alert('Item created successfully');
+                } else {
+                    alert('Failed to create item');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        createForm.reset();
+    });
+
+    //Edit form
+    const searchForm = document.getElementById('searchForm');
+    const itemDetailsContainer = document.getElementById('itemDetails');
+    const itemIdElement = document.getElementById('itemId');
+    const itemNameElement = document.getElementById('itemName');
+    const itemQuantityElement = document.getElementById('itemQuantity');
+    const itemPriceElement = document.getElementById('itemPrice');
+    const itemWeightElement = document.getElementById('itemWeight');
+    const itemZoneElement = document.getElementById('itemZone');
+    const itemCategoryElement = document.getElementById('itemCategory');
+    const itemManufacturerElement = document.getElementById('itemManufacturer');
+
+    const editButton = document.getElementById('editButton');
+    const editForm = document.getElementById('editForm');
+    const editNameInput = document.getElementById('editName');
+    const editQuantityInput = document.getElementById('editQuantity');
+    const editPriceInput = document.getElementById('editPrice');
+    const editWeightInput = document.getElementById('editWeight');
+    const editZoneInput = document.getElementById('editZone');
+    const editCategoryInput = document.getElementById('editCategory');
+    const editManufacturerInput = document.getElementById('editManufacturer');
+
+    // Search Form
+    searchForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const itemId = document.getElementById('searchId').value;
+        fetch(`/api/stock/${itemId}`)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to fetch item');
+                }
+            })
+            .then(item => {
+                itemIdElement.textContent = item.id
+                itemNameElement.textContent = item.name
+                itemQuantityElement.textContent = item.quantity
+                itemPriceElement.textContent = item.price
+                itemWeightElement.textContent = item.net_weight
+                itemZoneElement.textContent = item.zone
+                itemCategoryElement.textContent = item.category
+                itemManufacturerElement.textContent = item.manufacturer
+
+                itemDetailsContainer.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        searchForm.reset();
+    });
+
+    // Edit Button
+    editButton.addEventListener('click', function () {
+        editForm.style.display = 'block';
+
+        //populates input fields
+        editNameInput.value = itemNameElement.textContent;
+        editQuantityInput.value = itemQuantityElement.textContent;
+        editPriceInput.value = itemPriceElement.textContent;
+        editWeightInput.value = itemWeightElement.textContent;
+        editZoneInput.value = itemZoneElement.textContent;
+        editCategoryInput.value = itemCategoryElement.textContent;
+        editManufacturerInput.value = itemManufacturerElement.textContent;
+    });
+
+    // Edit Form
+    editForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const itemId = itemIdElement.textContent;
+        const newName = editNameInput.value;
+        const newQuantity = editQuantityInput.value;
+        const newPrice = editPriceInput.value;
+        const newWeight = editWeightInput.value;
+        const newZone = editZoneInput.value;
+        const newCategory = editCategoryInput.value;
+        const newManufacturer = editManufacturerInput.value;
+
+        const updatedItem = {
+            id: itemId,
+            name: newName,
+            quantity: newQuantity,
+            price: newPrice,
+            net_weight: newWeight,
+            zone: newZone,
+            category: newCategory,
+            manufacturer: newManufacturer
+        }
+        fetch(`/api/stock/${itemId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updatedItem)
+        })
+            .then(response => {
+                if (response.ok) {
+
+                    editForm.reset();
+                    editForm.style.display = 'none';
+                    itemDetailsContainer.style.display = 'none';
+                    alert('Item updated successfully');
+
+                } else {
+                    alert('Failed to update item');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        editForm.reset();
+    });
+
+</script>
+</body>
+</html>

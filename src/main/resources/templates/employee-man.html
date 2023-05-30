@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage employee accounts</title>
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #FFFFFF;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        h1 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input {
+            width: 200px;
+            padding: 5px;
+        }
+        .form-actions {
+            margin-top: 20px;
+        }
+        .form-actions button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: #FFF;
+            border: none;
+            cursor: pointer;
+        }
+        .form-actions button:hover {
+            background-color: #45a049;
+        }
+        .employee-list {
+            margin-top: 20px;
+        }
+        .employee-list table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .employee-list th,
+        .employee-list td {
+            padding: 8px;
+            border: 1px solid #ddd;
+        }
+        .employee-list th {
+            background-color: #f2f2f2;
+        }
+        .employee-list tr:hover {
+            background-color: #f5f5f5;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .actions button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: #FFFFFF;
+            border: none;
+            cursor: pointer;
+        }
+        .actions button:hover {
+            background-color: #45a049;
+        }
+        .edit-form {
+            display: none;
+            margin-top: 20px;
+        }
+
+    </style>
+</head>
+<body>
+
+<h1>Employee Management</h1>
+
+<button class="returnBack" id="previousPage">Previous page</button>
+<!-- adding employee form -->
+<div class="form-group">
+    <h3>Add Employee</h3>
+    <form id="addEmployeeForm">
+        <div>
+            <label for="employeeId">ID:</label>
+            <input type="text" id="employeeId" name="employeeId" required>
+        </div>
+        <div>
+            <label for="employeeName">Name:</label>
+            <input type="text" id="employeeName" name="employeeName" required>
+        </div>
+        <div>
+            <label for="employeeLastName">Last Name:</label>
+            <input type="text" id="employeeLastName" name="employeeLastName" required>
+        </div>
+        <div>
+            <label for="employeeUsername">Username:</label>
+            <input type="text" id="employeeUsername" name="employeeUsername" required>
+        </div>
+        <div>
+            <label for="employeePassword">Password:</label>
+            <input type="password" id="employeePassword" name="employeePassword" required>
+        </div>
+        <div class="form-actions">
+            <button type="submit">Add</button>
+        </div>
+    </form>
+</div>
+
+<!-- employee list-->
+<div class="employee-list">
+    <h3>Employee List</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Last Name</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody id="employeeTableBody"></tbody>
+    </table>
+</div>
+
+<!-- Edit and delete -->
+<div class="actions">
+    <div>
+        <button id="editEmployeeButton" disabled>Edit</button>
+        <button id="deleteEmployeeButton" disabled>Delete</button>
+    </div>
+</div>
+
+<div class="edit-form">
+    <h3>Edit Employee</h3>
+    <form id="editEmployeeForm">
+        <div>
+            <label for="editEmployeeId">ID:</label>
+            <input type="text" id="editEmployeeId" name="editEmployeeId" disabled>
+        </div>
+        <div>
+            <label for="editEmployeeName">Name:</label>
+            <input type="text" id="editEmployeeName" name="editEmployeeName" required>
+        </div>
+        <div>
+            <label for="editEmployeeLastName">Last Name:</label>
+            <input type="text" id="editEmployeeLastName" name="editEmployeeLastName" required>
+        </div>
+        <div>
+            <label for="editEmployeeUsername">Username:</label>
+            <input type="text" id="editEmployeeUsername" name="editEmployeeUsername" required>
+        </div>
+        <div>
+            <label for="editEmployeePassword">Password:</label>
+            <input type="text" id="editEmployeePassword" name="editEmployeePassword" required>
+        </div>
+        <div class="form-actions">
+            <button type="submit">Save</button>
+            <button id="cancelEditButton" type="button">Cancel</button>
+        </div>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+
+    document.getElementById("previousPage").addEventListener("click", function (){
+        history.back()
+    })
+
+    $(document).ready(function (){
+        fetchEmployeeList()
+
+        //handles form submission
+        $("#addEmployeeForm").submit(function (event) {
+            event.preventDefault()
+            addEmployee()
+        })
+
+        //handle edit button click
+        $('#editEmployeeButton').click(function () {
+            const employeeId = $("#employeeTableBody tr.selected").attr("data-id")
+            if (employeeId) {
+                showEditForm(employeeId)
+            }
+        })
+
+        //handle cancel edit button click
+        $("#cancelEditButton").click(function () {
+            hideEditForm()
+        })
+
+        $("#editEmployeeForm").submit(function (event) {
+            event.preventDefault();
+            saveEditedEmployee();
+        });
+
+        //handles delete button click
+        $("#deleteEmployeeButton").click(function () {
+            const employeeId = $("#employeeTableBody tr.selected").attr("data-id")
+            if (employeeId) {
+                deleteEmployee(employeeId)
+            }
+        })
+
+    })
+
+    //adding an employee
+    function addEmployee() {
+        const employee = {
+            id: $("#employeeId").val(),
+            name: $("#employeeName").val(),
+            lastName: $("#employeeLastName").val(),
+            username: $("#employeeUsername").val(),
+            password: $("#employeePassword").val()
+        };
+
+        $.ajax({
+            url: "api/employee",
+            type: "POST",
+            data: JSON.stringify(employee),
+            contentType: "application/json",
+            success: function () {
+                //clears the form fields after success
+                $("#employeeId, #employeeName, #employeeLastName, #employeeUsername, #employeePassword").val("");
+                //refresh list
+                fetchEmployeeList();
+            }
+        });
+    }
+
+    //function to fetch the employee list
+    function fetchEmployeeList() {
+        $.ajax({
+            url: "/api/employee",
+            type: "GET",
+            success: function (employees) {
+                let html = ""
+                employees.forEach(function (employee) {
+                    html += `<tr data-id="${employee.id}">
+                                    <td>${employee.id}</td>
+                                    <td>${employee.name}</td>
+                                    <td>${employee.lastName}</td>
+                                    <td>${employee.username}</td>
+                                    <td>${employee.password}</td>
+                                    <td><button class="select-button">Select</button></td>
+                                </tr>`
+                })
+                $("#employeeTableBody").html(html)
+            }
+        })
+    }
+
+    //function to delete employee
+    function deleteEmployee(employeeId) {
+        $.ajax({
+            url: `/api/employee/${employeeId}`,
+            type: "DELETE",
+            success: function () {
+                //refresh list
+                fetchEmployeeList()
+                //disable edit/delete buttons
+                $("#editEmployeeButton, #deleteEmployeeButton").prop("disabled", true);
+            }
+        })
+    }
+
+    function showEditForm(employeeId) {
+        // Retrieve the employee details from the table row
+        const row = $("#employeeTableBody tr.selected")
+        const employeeName = row.find("td:nth-child(2)").text()
+        const employeeLastName = row.find("td:nth-child(3)").text()
+        const employeeUsername = row.find("td:nth-child(4)").text()
+        const employeePassword = row.find("td:nth-child(5)").text()
+
+        // Populate the edit form fields
+        $("#editEmployeeId").val(employeeId);
+        $("#editEmployeeName").val(employeeName);
+        $("#editEmployeeLastName").val(employeeLastName);
+        $("#editEmployeeUsername").val(employeeUsername);
+        $("#editEmployeePassword").val(employeePassword);
+
+        // Show the edit form and hide the table row
+        $(".edit-form").show();
+        row.hide();
+    }
+
+    //function to hide the edit form and show the table row
+    function hideEditForm() {
+        $(".edit-form").hide();
+        $("#employeeTableBody tr.selected").show();
+    }
+
+    //function to save the edited employee details
+    function saveEditedEmployee() {
+        const employeeId = $("#editEmployeeId").val()
+        const employeeName = $("#editEmployeeName").val()
+        const employeeLastName = $("#editEmployeeLastName").val()
+        const employeeUsername = $("#editEmployeeUsername").val()
+        const employeePassword = $("#editEmployeePassword").val()
+
+        $.ajax({
+            url: `/api/employee/${employeeId}`,
+            type: "PUT",
+            data: JSON.stringify({
+                id: employeeId,
+                name: employeeName,
+                lastName: employeeLastName,
+                username: employeeUsername,
+                password: employeePassword
+            }),
+            contentType: "application/json",
+            success: function () {
+                $("#editEmployeeForm")[0].reset()
+                hideEditForm()
+                fetchEmployeeList()
+            }
+        });
+    }
+
+    //function to select an employee row
+    $("#employeeTableBody").on("click", ".select-button", function () {
+        const row = $(this).closest("tr");
+        row.addClass("selected").siblings().removeClass("selected");
+        $("#editEmployeeButton, #deleteEmployeeButton").prop("disabled", false);
+    });
+
+</script>
+</body>
+</html>

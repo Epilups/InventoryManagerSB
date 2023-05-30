@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventory view</title>
+  <style>
+
+    .main-content {
+      flex: 1;
+      background-color: lightblue;
+      height: 100vh;
+      border: 1px solid grey;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .stock-frame {
+      background-color: white;
+      border: 1px solid grey;
+      width: 1650px;
+      height: 800px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+    }
+    .title {
+      text-align: center;
+      margin: 0;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+    }
+    #searchForm {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    #stockList {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    #stockList li {
+      width: 30%;
+      margin-bottom: 20px;
+      padding: 10px;
+      border: 1px solid lightgray;
+      border-radius: 5px;
+      background-color: #f9f9f9;
+      list-style-type: none;
+    }
+    .returnButton {
+      display: flex;
+      position: absolute;
+      top: 0;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="main-content">
+  <div id="stockContainer" style="display: none;">
+    <div class="stock-frame">
+      <div class="top-bar">
+        <h2 class="title">Stock Items</h2>
+        <div id="searchForm">
+          <h3>Search items by:</h3>
+          <div>
+            <input type="radio" id="fieldId" name="searchField" value="id">
+            <label for="fieldId">Id</label>
+          </div>
+          <div>
+            <input type="radio" id="fieldName" name="searchField" value="name">
+            <label for="fieldName">Name</label>
+          </div>
+          <div>
+            <input type="radio" id="fieldPrice" name="searchField" value="price">
+            <label for="fieldPrice">Price</label>
+          </div>
+          <div>
+            <input type="radio" id="fieldQuantity" name="searchField" value="quantity">
+            <label for="fieldQuantity">Quantity</label>
+          </div>
+          <br>
+          <label for="searchInput"></label><input type="text" id="searchInput" placeholder="Enter search value">
+          <button onclick="searchItems()">Search</button>
+        </div>
+        <a class="returnButton" id="previousPage">Previous page</a>
+      </div>
+      <ul id="stockList"></ul>
+    </div>
+  </div>
+</div>
+<script>
+
+  document.getElementById("previousPage").addEventListener("click", function (){
+    history.back()
+  })
+
+  var stockContainer = document.getElementById("stockContainer")
+  stockContainer.style.display = "block"
+  function searchItems() {
+
+    var searchField = document.querySelector('input[name="searchField"]:checked').value
+    var searchValue = document.getElementById("searchInput").value
+
+    var stockList = document.getElementById("stockList");
+    stockList.innerHTML = ''
+
+    fetch('api/stock')
+            .then(response => response.json())
+            .then(data => {
+              var matchingItems = data.filter(stockItem => {
+                return stockItem[searchField]
+                        .toString()
+                        .toLowerCase()
+                        .includes(searchValue.toLowerCase())
+              });
+              matchingItems.forEach(stockItem => {
+                var listItem = document.createElement("li")
+                listItem.innerHTML = `
+                        <p><strong>Id:</strong> ${stockItem.id}</p>
+                        <p><strong>Name:</strong> ${stockItem.name}</p>
+                        <p><strong>Quantity:</strong> ${stockItem.quantity}</p>
+                        <p><strong>Price:</strong> ${stockItem.price}</p>
+                        <p><strong>Net Weight:</strong> ${stockItem.net_weight}</p>
+                        <p><strong>Zone:</strong> ${stockItem.zone}</p>
+                        <p><strong>Category:</strong> ${stockItem.category}</p>
+                        <p><strong>Manufacturer:</strong> ${stockItem.manufacturer}</p>`
+                stockList.appendChild(listItem)
+              });
+            })
+            .catch(error => {
+              console.error('Error:', error)
+            });
+  }
+</script>
+</body>
+</html>
